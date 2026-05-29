@@ -258,11 +258,53 @@ The app validates everything **before** making any changes to your desktop:
 
 ---
 
+## 🖥️ Video Screensaver
+
+This repo also includes a **macOS screensaver** that plays your video when your Mac goes idle.
+
+> **Important:** The video must be H.264 codec (not HEVC). See the ffmpeg commands above.
+
+### Build & Install
+
+```bash
+cd Screensaver
+chmod +x build_screensaver.sh set-video.sh
+./build_screensaver.sh
+./set-video.sh ~/Movies/wallpaper.mp4   # embeds the video & installs
+```
+
+Then go to **System Settings → Screen Saver** and select **"Video Screen Saver"**.
+
+### Change Video
+
+```bash
+cd Screensaver
+./set-video.sh /path/to/new-video.mp4
+```
+
+The script validates the codec (warns if HEVC), embeds the video in the bundle, signs it, and installs automatically.
+
+### Uninstall
+
+```bash
+rm -rf ~/Library/Screen\ Savers/VideoScreenSaver.saver
+```
+
+---
+
 ## 📝 How It Works (Technical)
 
+### Live Wallpaper
 1. Creates a borderless, click-through window at `CGWindowLevelForKey(.desktopWindow) + 1` — this places it between macOS's wallpaper layer and Finder's desktop icons
 2. Uses `AVQueuePlayer` + `AVPlayerLooper` for gapless video looping (no black frame flash at loop points)
 3. Monitors power source via `IOKit` callbacks — pauses instantly when AC is unplugged
 4. Listens for `screensDidSleep`, `willSleep`, `screensaver.didstart` notifications to pause during inactivity
 5. `preferredMaximumResolution` tells the hardware decoder to output at screen resolution, not the video's native resolution — saves GPU work
 6. Runs as `.accessory` activation policy — no Dock icon, no entry in Cmd+Tab
+
+### Screensaver
+1. Subclasses `ScreenSaverView` from Apple's `ScreenSaver.framework`
+2. Compiled as a Mach-O bundle, ad-hoc codesigned
+3. Video is embedded inside the `.saver` bundle (no sandbox issues)
+4. Same `AVPlayerLooper` + `preferredMaximumResolution` battery optimizations
+5. Decodes at 640×480 in System Settings preview mode to save resources
