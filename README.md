@@ -256,11 +256,72 @@ The app validates everything **before** making any changes to your desktop:
 
 ---
 
+## 🖥️ Video Screensaver (Bonus)
+
+This repo also includes a **macOS screensaver** that plays your chosen video when your Mac goes idle.
+
+### Build
+
+```bash
+cd Screensaver
+chmod +x build_screensaver.sh set-video.sh
+./build_screensaver.sh
+```
+
+### Install
+
+```bash
+# Option A: Double-click to install (macOS will prompt)
+open VideoScreenSaver.saver
+
+# Option B: Silent install
+cp -R VideoScreenSaver.saver ~/Library/Screen\ Savers/
+```
+
+Then go to **System Settings → Screen Saver** and select **"Video Screen Saver"**.
+
+### Set Your Video
+
+```bash
+# Using the helper script (validates the file first):
+./set-video.sh ~/Movies/my-cool-video.mp4
+
+# Or directly via macOS defaults:
+defaults write com.manish.videoscreensaver VideoPath "/Users/manish/Movies/my-cool-video.mp4"
+```
+
+### Video Lookup Order
+
+| Priority | Source |
+|----------|--------|
+| 1 | **Custom path** set via `defaults write` or `set-video.sh` |
+| 2 | `~/Movies/screensaver.mp4` (.m4v / .mov) |
+| 3 | `~/Movies/wallpaper.mp4` (.m4v / .mov) — shared with live wallpaper |
+
+If no video is found, the screensaver displays a setup message.
+
+### Uninstall
+
+```bash
+rm -rf ~/Library/Screen\ Savers/VideoScreenSaver.saver
+defaults delete com.manish.videoscreensaver  # remove saved config
+```
+
+---
+
 ## 📝 How It Works (Technical)
 
+### Live Wallpaper
 1. Creates a borderless, click-through window at `CGWindowLevelForKey(.desktopWindow) + 1` — this places it between macOS's wallpaper layer and Finder's desktop icons
 2. Uses `AVQueuePlayer` + `AVPlayerLooper` for gapless video looping (no black frame flash at loop points)
 3. Monitors power source via `IOKit` callbacks — pauses instantly when AC is unplugged
 4. Listens for `screensDidSleep`, `willSleep`, `screensaver.didstart` notifications to pause during inactivity
 5. `preferredMaximumResolution` tells the hardware decoder to output at screen resolution, not the video's native resolution — saves GPU work
 6. Runs as `.accessory` activation policy — no Dock icon, no entry in Cmd+Tab
+
+### Screensaver
+1. Subclasses `ScreenSaverView` from Apple's `ScreenSaver.framework`
+2. Compiled as a dynamic library packaged into a `.saver` bundle
+3. macOS `ScreenSaverEngine` loads the bundle automatically when idle timeout triggers
+4. Same `AVPlayerLooper` + `preferredMaximumResolution` optimizations as the wallpaper
+5. Decodes at 640×480 in System Settings preview mode to save resources
