@@ -1,7 +1,5 @@
-# Compiled binaries
+# Compiled binary
 LiveWallpaper
-Screensaver/VideoScreenSaver.saver/
-Screensaver/*.o
 
 # OS files
 .DS_Store
