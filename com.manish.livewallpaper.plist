@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.manish.livewallpaper</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <!-- UPDATE these two paths to match your setup -->
+    <string>/Users/manish/.gemini/antigravity/scratch/LiveWallpaper/LiveWallpaper</string>
+    <string>/Users/manish/Movies/wallpaper.mp4</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>LowPriorityBackgroundIO</key>
+  <true/>
+
+  <key>Nice</key>
+  <integer>10</integer>
+</dict>
+</plist>
