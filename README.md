@@ -56,9 +56,15 @@ You should see:
 
 ### Step 3: Run
 
+You can pass the path to any valid video file on your system:
+
 ```bash
 ./LiveWallpaper ~/Movies/wallpaper.mp4
+# Or use any custom location, e.g.:
+# ./LiveWallpaper ~/Desktop/my_cool_background.mp4
 ```
+
+> **Note:** The Live Wallpaper plays the video directly from this path. **Do not delete or move the video file** after starting the wallpaper, or it will stop working.
 
 That's it! You should see:
 - Your video playing as the desktop wallpaper
@@ -279,10 +285,13 @@ Then go to **System Settings → Screen Saver** and select **"Video Screen Saver
 
 ```bash
 cd Screensaver
+# You can use any video file in any location:
 ./set-video.sh /path/to/new-video.mp4
 ```
 
-The script validates the codec (warns if HEVC), embeds the video in the bundle, signs it, and installs automatically.
+The script validates the codec (warns if HEVC), **embeds a copy of the video inside the screensaver bundle**, signs it, and installs automatically.
+
+> **Note:** Because the script copies the video into the screensaver bundle, **you can safely delete or move the original video file** after the script finishes. The screensaver will use its internal copy.
 
 ### Uninstall
 
