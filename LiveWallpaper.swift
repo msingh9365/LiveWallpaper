@@ -94,10 +94,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // ── Step 2: Async playability check — do NOT build windows until confirmed ──
+        // NOTE: We check for video tracks + valid duration instead of `load(.isPlayable)`,
+        // because macOS 26 returns isPlayable=false for valid HEVC files with no audio track.
         Task {
-            let playable = (try? await videoAsset!.load(.isPlayable)) ?? false
+            let canPlay: Bool
+            do {
+                let tracks = try await videoAsset!.load(.tracks)
+                let duration = try await videoAsset!.load(.duration)
+                let hasVideo = tracks.contains { $0.mediaType == .video }
+                let hasValidDuration = CMTimeGetSeconds(duration) > 0
+                canPlay = hasVideo && hasValidDuration
+            } catch {
+                canPlay = false
+            }
             await MainActor.run {
-                if !playable {
+                if !canPlay {
                     showError(StartupError.notPlayable(videoURL!.lastPathComponent).description)
                     NSApp.terminate(nil)
                     return

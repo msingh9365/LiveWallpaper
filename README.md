@@ -136,11 +136,13 @@ For the best battery life, use videos matching these specs:
 
 | Setting | Recommended | Why |
 |---------|------------|-----|
-| **Codec** | H.265 (HEVC) | M-series has a dedicated HEVC hardware decoder — near 0% CPU |
+| **Codec** | H.264 | M-series has a dedicated H.264 hardware decoder — near 0% CPU |
 | **Resolution** | Match your screen (see table below) | Avoids unnecessary scaling work |
 | **Frame rate** | 24 fps | A wallpaper doesn't need 30fps; saves ~20% battery vs 30fps |
 | **Duration** | 10–60 seconds | Loops seamlessly; longer = more disk cache |
 | **Audio** | Strip it | Wallpaper is always muted anyway |
+
+> **Note:** HEVC (H.265) has a known rendering issue on macOS 26 where `AVPlayerLayer` shows a black screen. Use H.264 instead — Apple Silicon has hardware decoders for both codecs, so battery impact is identical.
 
 ### Display Resolutions by Mac Model
 
@@ -168,10 +170,10 @@ brew install ffmpeg
 
 ```bash
 ffmpeg -i input.mp4 \
-  -c:v hevc_videotoolbox \
+  -c:v h264_videotoolbox \
   -b:v 6M \
   -r 24 \
-  -vf "scale=2560:1664:force_original_aspect_ratio=increase,crop=2560:1664" \
+  -vf "scale=2560:1664:force_original_aspect_ratio=increase,crop=2560:1664,setsar=1:1" \
   -an \
   wallpaper.mp4
 ```
@@ -180,10 +182,10 @@ ffmpeg -i input.mp4 \
 
 ```bash
 ffmpeg -i input.mp4 \
-  -c:v hevc_videotoolbox \
+  -c:v h264_videotoolbox \
   -b:v 8M \
   -r 24 \
-  -vf "scale=2880:1864:force_original_aspect_ratio=increase,crop=2880:1864" \
+  -vf "scale=2880:1864:force_original_aspect_ratio=increase,crop=2880:1864,setsar=1:1" \
   -an \
   wallpaper.mp4
 ```
@@ -191,14 +193,14 @@ ffmpeg -i input.mp4 \
 #### Generic (any Mac) — keeps original aspect ratio
 
 ```bash
-ffmpeg -i input.mp4 -c:v hevc_videotoolbox -b:v 8M -r 24 -an wallpaper.mp4
+ffmpeg -i input.mp4 -c:v h264_videotoolbox -b:v 8M -r 24 -an wallpaper.mp4
 ```
 
 Flag breakdown:
-- `-c:v hevc_videotoolbox` — uses Apple's hardware encoder (fast, efficient)
+- `-c:v h264_videotoolbox` — uses Apple's hardware encoder (fast, battery efficient)
 - `-b:v 6M` / `-b:v 8M` — bitrate (6M is plenty for 13"; 8M for larger screens)
 - `-r 24` — 24 fps, ideal for a background
-- `-vf scale=…,crop=…` — scales up to fill the screen then center-crops, no black bars
+- `-vf scale=…,crop=…,setsar=1:1` — scales to fill screen, center-crops, forces square pixels
 - `-an` — strips the audio track
 
 ---
