@@ -136,27 +136,70 @@ For the best battery life, use videos matching these specs:
 
 | Setting | Recommended | Why |
 |---------|------------|-----|
-| **Codec** | H.265 (HEVC) | M-series has dedicated HEVC hardware decoder |
-| **Resolution** | Match your screen (e.g. 2880×1800 for 14" MBP) | Avoids downscale overhead |
-| **Frame rate** | 24–30 fps | 60fps doubles GPU compositing for no visible benefit on a wallpaper |
+| **Codec** | H.265 (HEVC) | M-series has a dedicated HEVC hardware decoder — near 0% CPU |
+| **Resolution** | Match your screen (see table below) | Avoids unnecessary scaling work |
+| **Frame rate** | 24 fps | A wallpaper doesn't need 30fps; saves ~20% battery vs 30fps |
 | **Duration** | 10–60 seconds | Loops seamlessly; longer = more disk cache |
 | **Audio** | Strip it | Wallpaper is always muted anyway |
+
+### Display Resolutions by Mac Model
+
+| Mac Model | Native Resolution | Aspect Ratio |
+|-----------|------------------|--------------|
+| MacBook Air 13" (M2/M3) | **2560 × 1664** | ~16:10.4 |
+| MacBook Air 15" (M2/M3) | **2880 × 1864** | ~16:10.4 |
+| MacBook Pro 14" (M3/M4) | 3024 × 1964 | ~16:10.4 |
+| MacBook Pro 16" (M3/M4) | 3456 × 2234 | ~16:10.4 |
+
+### What Resolution to Look for When Downloading
+
+Search for **4K (3840×2160)** videos — even though it's a 16:9 ratio and your screen is slightly taller (16:10.4), the ffmpeg command below will crop/scale it perfectly, and starting from 4K gives you more detail than the display can even show. **Never download below 1080p** — it will look soft.
+
+> **Quick rule:** Search "4K loop" or "4K seamless" on [Pixabay](https://pixabay.com/videos/) or [Pexels](https://www.pexels.com/videos/). Download the highest available resolution.
 
 ### Convert Any Video with ffmpeg
 
 ```bash
 # Install ffmpeg (if not already installed)
 brew install ffmpeg
-
-# Convert to optimal wallpaper format
-ffmpeg -i input.mp4 -c:v hevc_videotoolbox -b:v 8M -r 30 -an wallpaper.mp4
 ```
 
-Breakdown:
-- `-c:v hevc_videotoolbox` — hardware-accelerated HEVC encoding
-- `-b:v 8M` — 8 Mbps bitrate (good quality for wallpaper)
-- `-r 30` — 30 fps
-- `-an` — strip audio track
+#### MacBook Air 13" (M2 / M3) — 2560×1664
+
+```bash
+ffmpeg -i input.mp4 \
+  -c:v hevc_videotoolbox \
+  -b:v 6M \
+  -r 24 \
+  -vf "scale=2560:1664:force_original_aspect_ratio=increase,crop=2560:1664" \
+  -an \
+  wallpaper.mp4
+```
+
+#### MacBook Air 15" (M2 / M3) — 2880×1864
+
+```bash
+ffmpeg -i input.mp4 \
+  -c:v hevc_videotoolbox \
+  -b:v 8M \
+  -r 24 \
+  -vf "scale=2880:1864:force_original_aspect_ratio=increase,crop=2880:1864" \
+  -an \
+  wallpaper.mp4
+```
+
+#### Generic (any Mac) — keeps original aspect ratio
+
+```bash
+ffmpeg -i input.mp4 -c:v hevc_videotoolbox -b:v 8M -r 24 -an wallpaper.mp4
+```
+
+Flag breakdown:
+- `-c:v hevc_videotoolbox` — uses Apple's hardware encoder (fast, efficient)
+- `-b:v 6M` / `-b:v 8M` — bitrate (6M is plenty for 13"; 8M for larger screens)
+- `-r 24` — 24 fps, ideal for a background
+- `-vf scale=…,crop=…` — scales up to fill the screen then center-crops, no black bars
+- `-an` — strips the audio track
 
 ---
 
