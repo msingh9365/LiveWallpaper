@@ -15,7 +15,7 @@ rm -rf "${SAVER_DIR}" "${OBJ}"
 # Create bundle structure
 mkdir -p "${SAVER_DIR}/Contents/MacOS"
 
-# Compile to object
+# Step 1: Compile Swift to object file
 echo "  Compiling..."
 swiftc -parse-as-library -c \
     -module-name "${NAME}" \
@@ -23,30 +23,37 @@ swiftc -parse-as-library -c \
     -o "${OBJ}" \
     "${SRC}"
 
-# Link as dynamic library
-echo "  Linking..."
-swiftc \
-    -emit-library \
-    -module-name "${NAME}" \
+# Step 2: Link as MH_BUNDLE (not MH_DYLIB)
+# ScreenSaverEngine requires a loadable bundle, not a dynamic library.
+echo "  Linking as bundle..."
+xcrun clang -bundle \
+    -o "${SAVER_DIR}/Contents/MacOS/${NAME}" \
+    "${OBJ}" \
     -framework ScreenSaver \
     -framework AVFoundation \
     -framework AppKit \
-    -O \
-    -o "${SAVER_DIR}/Contents/MacOS/${NAME}" \
-    "${OBJ}"
+    -L /usr/lib/swift \
+    -lswiftCore \
+    -Xlinker -rpath -Xlinker /usr/lib/swift
 
-# Cleanup
+# Cleanup object file
 rm -f "${OBJ}"
 
-# Info.plist
+# Copy Info.plist
 cp "${SCRIPT_DIR}/Info.plist" "${SAVER_DIR}/Contents/"
 
+# Step 3: Ad-hoc codesign (required on modern macOS for system processes to load)
+echo "  Signing..."
+codesign --force --sign - "${SAVER_DIR}"
+
+# Verify
+TYPE=$(file -b "${SAVER_DIR}/Contents/MacOS/${NAME}" | head -1)
 echo ""
 echo "Done: ${SAVER_DIR}"
+echo "Type: ${TYPE}"
 echo ""
 echo "Install:"
 echo "  open ${SAVER_DIR}"
-echo "  (macOS will prompt to install the screensaver)"
 echo ""
-echo "Or install silently:"
+echo "Or silently:"
 echo "  cp -R ${SAVER_DIR} ~/Library/Screen\ Savers/"
